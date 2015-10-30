@@ -18,9 +18,33 @@
      []
      (.listFiles d))))
 
-(defn start-window []
+(defn start-playing []
+  (.start(Thread. #(-> (->stream (selection lb)) decode play ))))
+
+(defn setup-gui []
   (native!)
-  (-> f pack! show!))
+  (-> f pack! show!)
+  (def lb (listbox :model (mp3-paths (File. "."))))
+  (def b-play (button :text "Play"))
+  (def b-stop (button :text "Stop"))
+  (def b-prev (button :text "Prev"))
+  (def b-next (button :text "Next"))
+  (listen b-play :action (fn [e]
+                           (stop)
+                           (start-playing)))
+  (listen b-stop :action (fn [e] (stop)))
+  (listen b-prev :action (fn [e]
+    (stop)
+    (.setSelectedIndex lb (mod (dec (-> lb .getSelectedIndex)) (-> lb .getModel .getSize)))
+    (start-playing)))
+  (listen b-next :action (fn [e]
+    (stop)
+    (.setSelectedIndex lb (mod (inc (-> lb .getSelectedIndex)) (-> lb .getModel .getSize)))
+    (start-playing)))
+
+  (def split (left-right-split (scrollable lb) (grid-panel :columns 2
+              :items [b-play b-stop b-prev b-next]) :divider-location 1/3))
+  (display split))
 
 (defn display [content]
   (config! f :content content)
@@ -28,14 +52,9 @@
 
 (defn -main
   [& args]
-  (start-window)
-  (def lb (listbox :model (mp3-paths (File. "."))))
-  (def b-play (button :text "Play"))
-  (def b-stop (button :text "Stop"))
-  (listen b-play :action (fn [e] (.start(Thread. #(-> (->stream (selection lb)) decode play )))))
-  (listen b-stop :action (fn [e] (stop)))
-  (def split (left-right-split (scrollable lb) (grid-panel :columns 1
-              :items [b-play b-stop]) :divider-location 1/3))
-  (display split)
-)
-;; (-main)
+  (setup-gui))
+
+(-main)
+
+
+
