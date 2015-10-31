@@ -4,9 +4,6 @@
 (use 'clj-audio.core)
 (use 'seesaw.core)
 
-(def f (frame :title "Mp3 Player"))
-
-
 (defn mp3-paths [d]
   (filter
     (fn [x] (re-matches #".*mp3" (str x)))
@@ -18,17 +15,27 @@
      []
      (.listFiles d))))
 
+
+(def f (frame :title "Mp3 Player"))
+(def lb (listbox :model (mp3-paths (File. "."))))
+(def b-play (button :text "Play"))
+(def b-stop (button :text "Stop"))
+(def b-prev (button :text "Prev"))
+(def b-next (button :text "Next"))
+(def lbl-remaining (label  :text (str "Total " (-> lb .getModel .getSize))))
+
+(defn set-label-text []
+  (config! lbl-remaining :text (str (-> lb .getSelectedIndex inc) "/" (-> lb .getModel .getSize))))
+
 (defn start-playing []
+  (set-label-text)
   (.start(Thread. #(-> (->stream (selection lb)) decode play ))))
 
+(defn display [content]
+  (config! f :content content)
+  content)
+
 (defn setup-gui []
-  (native!)
-  (-> f pack! show!)
-  (def lb (listbox :model (mp3-paths (File. "."))))
-  (def b-play (button :text "Play"))
-  (def b-stop (button :text "Stop"))
-  (def b-prev (button :text "Prev"))
-  (def b-next (button :text "Next"))
   (listen b-play :action (fn [e]
                            (stop)
                            (start-playing)))
@@ -42,13 +49,14 @@
     (.setSelectedIndex lb (mod (inc (-> lb .getSelectedIndex)) (-> lb .getModel .getSize)))
     (start-playing)))
 
-  (def split (left-right-split (scrollable lb) (grid-panel :columns 2
-              :items [b-play b-stop b-prev b-next]) :divider-location 1/3))
-  (display split))
+  (def split (left-right-split (top-bottom-split (scrollable lb) lbl-remaining :divider-location 9/10)
+                               (grid-panel :columns 2 :items [b-play b-stop b-prev b-next])
+                               :divider-location 1/3))
+  (display split)
+  (native!)
+  (-> f pack! show!))
 
-(defn display [content]
-  (config! f :content content)
-  content)
+
 
 (defn -main
   [& args]
