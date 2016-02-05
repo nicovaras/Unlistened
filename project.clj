@@ -9,7 +9,9 @@
                   [org.clojars.automata/mp3spi "1.9.4"]
                   [clj-glob "1.0.0"]
                   [seesaw "1.4.2" :exclusions [org.clojure/clojure]]
-                  [org.clojars.wmealing/clj-audio "0.2.0-SNAPSHOT"]]
+                  [org.clojars.wmealing/clj-audio "0.2.0-SNAPSHOT"]
+                  [org.clojure/tools.trace "0.7.5"]
+                  ]
   :main ^:skip-aot player.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}}
