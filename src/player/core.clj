@@ -6,6 +6,8 @@
 (require '[clojure.string :as str])
 (require 'clojure.tools.trace)
 
+(def listened-songs #{})
+
 (defn mp3-paths [d]
   (filter
     (fn [x] (re-matches #".*mp3" (str x)))
@@ -19,6 +21,7 @@
 
 (defn split-path [path]
   (last (str/split path #"/" )))
+
 (defn  mp3-data []
   (reduce
     (fn [x f] (merge x f))
@@ -28,19 +31,40 @@
   )
 
 (def f (frame :title "Mp3 Player"))
-(def lb (listbox :model (keys (mp3-data))))
 (def b-play (button :text "Play"))
 (def b-stop (button :text "Stop"))
 (def b-prev (button :text "Prev"))
 (def b-next (button :text "Next"))
+(def lb (listbox :model (keys (mp3-data))))
 (def lbl-remaining (label :text (str "Total " (-> lb .getModel .getSize))))
 
 (defn set-label-text []
   (config! lbl-remaining :text (str (-> lb .getSelectedIndex inc) "/" (-> lb .getModel .getSize))))
 
+(defn filtered-songs []
+    (filter
+      (fn [x] (not (contains? listened-songs x)))
+      (keys (mp3-data))))
+
+(defn update-lists []
+  (let [model (javax.swing.DefaultListModel.)
+        items (filtered-songs)]
+    (println items)
+    (doseq [item items]
+      (.addElement model item))
+    (.setModel lb model)))
+
+
 (defn  start-playing []
+  (let [current-song (symbol (selection lb))]
   (set-label-text)
- (.start (Thread. #(-> (->stream (:path ((symbol (selection lb)) (mp3-data)))) decode play ))))
+  (.start (Thread.
+    #(->
+      (->stream (:path (current-song (mp3-data)))) decode play )))
+  (def listened-songs (conj listened-songs current-song))
+  (update-lists)
+  (println listened-songs)
+    ))
 ; .(clojure.tools.trace/dotrace [mp3-data] (mp3-data))
 
 (defn display [content]
@@ -68,8 +92,6 @@
   (display split)
   (native!)
   (-> f pack! show!))
-
-
 
 (defn -main
   [& args]
