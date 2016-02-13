@@ -35,6 +35,9 @@
 (def b-stop (button :text "Stop"))
 (def b-prev (button :text "Prev"))
 (def b-next (button :text "Next"))
+(def b-random (button :text "Random"))
+
+
 (def lb (listbox :model (keys (mp3-data))))
 (def lb-listened (listbox))
 (def lbl-remaining (label :text (str "Total " (-> lb .getModel .getSize))))
@@ -82,6 +85,8 @@
   (listen b-play :action (fn [e]
                            (stop)
                            (start-playing)))
+  (listen b-random :action (fn [e]
+                            (.setSelectedIndex lb  (rand-int (-> lb .getModel .getSize))) ))
   (listen b-stop :action (fn [e] (stop)))
   (listen b-prev :action (fn [e]
     (stop)
@@ -94,7 +99,7 @@
 
   (def split (left-right-split
                (top-bottom-split (top-bottom-split (scrollable lb) (scrollable lb-listened)) lbl-remaining :divider-location 9/10)
-               (grid-panel :columns 3 :items [ b-play b-stop b-prev b-next])
+               (grid-panel :columns 3 :items [ b-play b-stop b-prev b-next b-random])
                                :divider-location 1/3))
   (display split)
   (native!)
@@ -104,7 +109,7 @@
   [& args]
   (setup-gui))
 
-(-main)
+; (-main)
 
 
 
