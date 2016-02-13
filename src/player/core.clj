@@ -30,13 +30,15 @@
          (mp3-paths (File. "."))))
   )
 
-(def f (frame :title "Mp3 Player"))
+(def f (frame :title "Mp3 Player" :on-close :exit))
 (def b-play (button :text "Play"))
 (def b-stop (button :text "Stop"))
 (def b-prev (button :text "Prev"))
 (def b-next (button :text "Next"))
 (def lb (listbox :model (keys (mp3-data))))
+(def lb-listened (listbox))
 (def lbl-remaining (label :text (str "Total " (-> lb .getModel .getSize))))
+(.setSelectedIndex lb 0)
 
 (defn set-label-text []
   (config! lbl-remaining :text (str (-> lb .getSelectedIndex inc) "/" (-> lb .getModel .getSize))))
@@ -49,10 +51,14 @@
 (defn update-lists []
   (let [model (javax.swing.DefaultListModel.)
         items (filtered-songs)]
-    (println items)
     (doseq [item items]
       (.addElement model item))
-    (.setModel lb model)))
+    (.setModel lb model))
+
+  (let [model (javax.swing.DefaultListModel.)]
+    (doseq [item listened-songs]
+      (.addElement model item))
+  (.setModel lb-listened model)))
 
 
 (defn  start-playing []
@@ -64,6 +70,7 @@
   (def listened-songs (conj listened-songs current-song))
   (update-lists)
   (println listened-songs)
+  (.setSelectedIndex lb 0)
     ))
 ; .(clojure.tools.trace/dotrace [mp3-data] (mp3-data))
 
@@ -86,8 +93,8 @@
     (start-playing)))
 
   (def split (left-right-split
-               (top-bottom-split (scrollable lb) lbl-remaining :divider-location 9/10)
-               (grid-panel :columns 2 :items [b-play b-stop b-prev b-next])
+               (top-bottom-split (top-bottom-split (scrollable lb) (scrollable lb-listened)) lbl-remaining :divider-location 9/10)
+               (grid-panel :columns 3 :items [ b-play b-stop b-prev b-next])
                                :divider-location 1/3))
   (display split)
   (native!)
