@@ -3,10 +3,17 @@
   (:gen-class))
 (use 'clj-audio.core)
 (use 'seesaw.core)
+(use 'seesaw.chooser)
 (require '[clojure.string :as str])
 (require 'clojure.tools.trace)
 
 (def listened-songs #{})
+(def folder (atom {}))
+(defn get-folder []
+  (@folder :folder))
+(defn update-folder [val]
+  (swap! folder assoc :folder val))
+(update-folder ".")
 
 (defn mp3-paths [d]
   (filter
@@ -27,7 +34,7 @@
     (fn [x f] (merge x f))
     {}
     (map (fn [x] {(symbol (split-path x)){:path x :played false }})
-         (mp3-paths (File. "."))))
+         (mp3-paths (File. (get-folder)))))
   )
 
 (def f (frame :title "Mp3 Player" :on-close :exit))
@@ -36,6 +43,8 @@
 (def b-prev (button :text "Prev"))
 (def b-next (button :text "Next"))
 (def b-random (button :text "Random"))
+(def b-folder (button :text "Open dir"))
+
 
 
 (def lb (listbox :model (keys (mp3-data))))
@@ -82,6 +91,19 @@
   content)
 
 (defn setup-gui []
+  (listen b-folder :action
+    (fn [e]
+      (update-folder
+        (.getAbsolutePath (choose-file :selection-mode :dirs-only)))
+      (let [model (javax.swing.DefaultListModel.)]
+        (doseq [item (keys (mp3-data))]
+          (.addElement model item))
+        (.setModel lb model)
+      )
+    )
+  )
+
+
   (listen b-play :action (fn [e]
                            (stop)
                            (start-playing)))
@@ -99,7 +121,7 @@
 
   (def split (left-right-split
                (top-bottom-split (top-bottom-split (scrollable lb) (scrollable lb-listened)) lbl-remaining :divider-location 9/10)
-               (grid-panel :columns 3 :items [ b-play b-stop b-prev b-next b-random])
+               (grid-panel :columns 3 :items [ b-play b-stop b-prev b-next b-random b-folder])
                                :divider-location 1/3))
   (display split)
   (native!)
