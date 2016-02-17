@@ -44,9 +44,6 @@
 (def b-next (button :text "Next"))
 (def b-random (button :text "Random"))
 (def b-folder (button :text "Open dir"))
-
-
-
 (def lb (listbox :model (keys (mp3-data))))
 (def lb-listened (listbox))
 (def lbl-remaining (label :text (str "Total " (-> lb .getModel .getSize))))
@@ -118,6 +115,13 @@
     (stop)
     (.setSelectedIndex lb (mod (inc (-> lb .getSelectedIndex)) (-> lb .getModel .getSize)))
     (start-playing)))
+
+  (listen lb-listened :mouse-clicked (fn [e]
+    (println listened-songs)
+    (def listened-songs
+      (disj listened-songs (-> lb-listened .getSelectedValue) ))
+    (println listened-songs)
+    (update-lists)))
 
   (def split (left-right-split
                (top-bottom-split (top-bottom-split (scrollable lb) (scrollable lb-listened)) lbl-remaining :divider-location 9/10)
